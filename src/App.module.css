@@ -1,0 +1,80 @@
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 32px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.logo {
+  height: 56px;
+  width: auto;
+  display: block;
+}
+
+.logoBlue { color: var(--blue); }
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.themeBtn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.navTabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.navTab {
+  padding: 9px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2);
+  background: none;
+  font-family: inherit;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+
+.navTabActive {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  font-weight: 500;
+}
+
+.navTab:hover:not(.navTabActive) {
+  color: var(--text);
+}
+
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text3);
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
