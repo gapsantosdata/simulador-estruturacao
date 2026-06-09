@@ -11,6 +11,11 @@ const INDEXADORES = ['CDI', 'IPCA+', 'IGPM+', 'Prefixado'];
 const INST_KEYS = Object.keys(instruments);
 const SUCCESS_MIN_PCT = 2;
 
+// formatter pt-BR para PDF (independente do locale do browser)
+const nfBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtN = (v) => nfBRL.format(Math.round(v));
+const fmtP = (v) => v.toFixed(2).replace('.', ',') + '%';
+
 export default function Simulator() {
   const { get, set } = useUrlState();
 
@@ -100,7 +105,7 @@ export default function Simulator() {
 
     const paramsRows = [
       ['Instrumento', inst.label],
-      ['Volume bruto', fmt(volume)],
+      ['Volume bruto', fmtN(volume)],
       ['Prazo', prazo + ' meses'],
       ['Indexador', indexador],
       ['Taxa indicativa', taxa.toFixed(2).replace('.', ',') + '% a.a.'],
@@ -115,7 +120,7 @@ export default function Simulator() {
       return `
         <tr class="${i % 2 === 1 ? 'alt' : ''}">
           <td class="cost-label">${r.label}</td>
-          <td class="cost-val">${fmt(r.amount)}</td>
+          <td class="cost-val">${fmtN(r.amount)}</td>
           <td class="cost-pct">${pct}</td>
         </tr>`;
     }).join('');
@@ -130,30 +135,32 @@ export default function Simulator() {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .header { background: #185FA5; color: #fff; padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
-  .header-left { font-size: 15px; font-weight: 700; }
+  .header-left { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
   .header-right { font-size: 10px; opacity: 0.82; }
-  .body { padding: 28px 32px 100px; }
-  .title { font-size: 18px; font-weight: 700; color: #185FA5; margin-bottom: 3px; }
-  .divider { border: none; border-top: 2px solid #185FA5; margin: 6px 0; }
-  .date { font-size: 10px; color: #aaa; margin-bottom: 22px; }
-  .section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 20px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
-  .params-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-  .param-key { width: 160px; padding: 5px 8px; color: #6b7280; font-size: 11px; }
-  .param-val { padding: 5px 8px; font-size: 11px; font-weight: 600; color: #1a1a1a; }
+  .body { padding: 28px 32px 90px; }
+  .title { font-size: 20px; font-weight: 700; color: #185FA5; margin-bottom: 3px; }
+  .divider { border: none; border-top: 2px solid #185FA5; margin: 6px 0 4px; }
+  .date { font-size: 10px; color: #aaa; margin-bottom: 24px; }
+  .section { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+  .params-table { width: 100%; border-collapse: collapse; }
+  .param-key { width: 160px; padding: 5px 10px; color: #6b7280; font-size: 11px; }
+  .param-val { padding: 5px 10px; font-size: 11px; font-weight: 600; color: #1a1a1a; }
   .costs-table { width: 100%; border-collapse: collapse; }
-  .costs-table thead th { text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; }
+  .costs-table thead th { text-align: left; padding: 6px 10px; font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e5e7eb; }
   .costs-table thead th:not(:first-child) { text-align: right; }
-  .cost-label { padding: 6px 8px; font-size: 11px; color: #374151; }
-  .cost-val { padding: 6px 8px; text-align: right; font-size: 11px; font-weight: 600; color: #1a1a1a; }
-  .cost-pct { padding: 6px 8px; text-align: right; font-size: 10px; color: #9ca3af; }
+  .cost-label { padding: 6px 10px; font-size: 11px; color: #374151; }
+  .cost-val { padding: 6px 10px; text-align: right; font-size: 11px; font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+  .cost-pct { padding: 6px 10px; text-align: right; font-size: 10px; color: #9ca3af; white-space: nowrap; }
   .alt td { background: #f9fafb; }
-  .total-row td { padding: 8px; font-weight: 700; font-size: 12px; color: #1a1a1a; border-top: 2px solid #185FA5; }
-  .result-box { background: #EBF5FD; border: 1.5px solid #185FA5; border-radius: 8px; padding: 16px 20px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-  .result-label { font-size: 10px; font-weight: 700; color: #0C447C; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-  .result-value { font-size: 26px; font-weight: 700; color: #185FA5; }
-  .result-meta { text-align: right; font-size: 11px; color: #374151; line-height: 1.7; }
+  .total-row td { padding: 9px 10px; font-weight: 700; font-size: 12px; color: #1a1a1a; border-top: 2px solid #185FA5; }
+  .result-box { background: #EBF5FD; border: 1.5px solid #185FA5; border-radius: 8px; padding: 18px 24px; margin-top: 22px; display: table; width: 100%; }
+  .result-left { display: table-cell; vertical-align: middle; }
+  .result-right { display: table-cell; vertical-align: middle; text-align: right; }
+  .result-label { font-size: 9px; font-weight: 700; color: #0C447C; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .result-value { font-size: 28px; font-weight: 700; color: #185FA5; letter-spacing: -0.5px; }
+  .result-meta { font-size: 11px; color: #374151; line-height: 1.8; }
   .result-meta strong { color: #185FA5; }
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 36px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-size: 9px; color: #9ca3af; }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 34px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-size: 9px; color: #9ca3af; }
   @media print { body { background: #fff; } .footer { position: fixed; bottom: 0; } }
 </style>
 </head>
@@ -170,25 +177,33 @@ export default function Simulator() {
   <table class="params-table"><tbody>${paramsRows}</tbody></table>
   <div class="section">Breakdown de custos</div>
   <table class="costs-table">
-    <thead><tr><th style="text-align:left">Item</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">% Volume</th></tr></thead>
+    <thead>
+      <tr>
+        <th style="text-align:left">Item</th>
+        <th style="text-align:right">Valor</th>
+        <th style="text-align:right">% Volume</th>
+      </tr>
+    </thead>
     <tbody>
       ${costRows}
       <tr class="total-row">
         <td class="cost-label">Custo total de estruturação</td>
-        <td class="cost-val">${fmt(d.totalAll)}</td>
-        <td class="cost-pct">${fmtPct(d.custoPct)}</td>
+        <td class="cost-val">${fmtN(d.totalAll)}</td>
+        <td class="cost-pct">${fmtP(d.custoPct)}</td>
       </tr>
     </tbody>
   </table>
   <div class="result-box">
-    <div>
+    <div class="result-left">
       <div class="result-label">Volume líquido ao emissor</div>
-      <div class="result-value">${fmt(d.liquido)}</div>
+      <div class="result-value">${fmtN(d.liquido)}</div>
     </div>
-    <div class="result-meta">
-      <strong>${d.liquidoPct.toFixed(2).replace('.', ',')}%</strong> do volume bruto<br>
-      Custo médio a.a.: <strong>${fmtPct(d.custoAA)}</strong><br>
-      Prazo: <strong>${prazo} meses</strong> · ${indexador} + ${taxa}% a.a.
+    <div class="result-right">
+      <div class="result-meta">
+        <strong>${d.liquidoPct.toFixed(2).replace('.', ',')}%</strong> do volume bruto<br>
+        Custo médio a.a.: <strong>${fmtP(d.custoAA)}</strong><br>
+        Prazo: <strong>${prazo} meses</strong> · ${indexador} + ${taxa}% a.a.
+      </div>
     </div>
   </div>
 </div>

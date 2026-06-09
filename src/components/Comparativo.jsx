@@ -8,6 +8,10 @@ import styles from './Comparativo.module.css';
 
 const INST_KEYS = Object.keys(instruments);
 
+const nfBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtN = (v) => nfBRL.format(Math.round(v));
+const fmtP = (v) => v.toFixed(2).replace('.', ',') + '%';
+
 function computeSvcRows(svcEnabled, svcValues, prazo, outrosPeriod, outrosDesc) {
   const rows = [];
   let total = 0;
@@ -114,27 +118,40 @@ export default function Comparativo() {
       const rowsHTML = r.allRows.map((row, i) => `
         <tr class="${i % 2 === 1 ? 'alt' : ''}">
           <td class="cost-label">${row.label}</td>
-          <td class="cost-val">${fmt(row.amount)}</td>
+          <td class="cost-val">${fmtN(row.amount)}</td>
+          <td class="cost-pct">${volume > 0 ? ((row.amount / volume) * 100).toFixed(2).replace('.', ',') + '%' : '—'}</td>
         </tr>`).join('');
       return `
         <div class="col${isWinner ? ' col-winner' : ''}">
           <div class="col-header">
             <span class="col-title">${r.inst.label}</span>
-            ${isWinner ? '<span class="badge">Menor custo</span>' : ''}
+            ${isWinner ? '<span class="badge">&#10003; Menor custo</span>' : ''}
           </div>
           <div class="highlight">
             <div class="hl-label">Volume líquido ao emissor</div>
-            <div class="hl-value">${fmt(r.liquido)}</div>
+            <div class="hl-value">${fmtN(r.liquido)}</div>
+            <div class="hl-sub">${fmtP(r.liquidoPct)} do volume bruto</div>
           </div>
           <table class="costs-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Item</th>
+                <th style="text-align:right">Valor</th>
+                <th style="text-align:right">% Vol.</th>
+              </tr>
+            </thead>
             <tbody>
               ${rowsHTML}
-              <tr class="total-row"><td class="cost-label">Custo total</td><td class="cost-val">${fmt(r.total)}</td></tr>
-              <tr class="meta-row"><td class="cost-label">% do volume</td><td class="cost-val">${fmtPct(r.custoPct)}</td></tr>
-              <tr class="meta-row"><td class="cost-label">Custo médio a.a.</td><td class="cost-val">${fmtPct(r.custoAA)}</td></tr>
-              <tr class="meta-row"><td class="cost-label">Líquido / bruto</td><td class="cost-val">${fmtPct(r.liquidoPct)}</td></tr>
+              <tr class="total-row">
+                <td class="cost-label">Custo total</td>
+                <td class="cost-val">${fmtN(r.total)}</td>
+                <td class="cost-pct">${fmtP(r.custoPct)}</td>
+              </tr>
             </tbody>
           </table>
+          <div class="metrics">
+            <div class="metric-item"><span class="metric-label">Custo médio a.a.</span><span class="metric-val">${fmtP(r.custoAA)}</span></div>
+          </div>
         </div>`;
     }
 
@@ -144,36 +161,56 @@ export default function Comparativo() {
 <meta charset="UTF-8">
 <title>Bloxs — Comparativo</title>
 <style>
-  @page { size: A4 landscape; margin: 0; }
+  @page { size: A4 portrait; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .header { background: #185FA5; color: #fff; padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; }
-  .header-left { font-size: 14px; font-weight: 700; }
-  .header-right { font-size: 10px; opacity: 0.82; }
-  .body { padding: 24px 32px 80px; }
-  .title { font-size: 17px; font-weight: 700; color: #185FA5; margin-bottom: 3px; }
-  .divider { border: none; border-top: 2px solid #185FA5; margin: 5px 0; }
-  .date { font-size: 10px; color: #aaa; margin-bottom: 18px; }
-  .cols { display: flex; gap: 16px; align-items: flex-start; }
-  .col { flex: 1; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; background: #fff; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1a1a1a; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .header { background: #185FA5; color: #fff; padding: 13px 28px; display: table; width: 100%; }
+  .header-left { display: table-cell; font-size: 14px; font-weight: 700; }
+  .header-right { display: table-cell; text-align: right; font-size: 10px; opacity: 0.82; vertical-align: middle; }
+  .body { padding: 22px 28px 80px; }
+  .title { font-size: 18px; font-weight: 700; color: #185FA5; margin-bottom: 2px; }
+  .divider { border: none; border-top: 2px solid #185FA5; margin: 5px 0 4px; }
+  .meta { font-size: 10px; color: #aaa; margin-bottom: 18px; }
+  /* Float-based 2-col — mais compatível com print */
+  .cols { width: 100%; overflow: hidden; margin-bottom: 14px; }
+  .col { float: left; width: 48%; border: 1px solid #e5e7eb; border-radius: 6px; padding: 13px; background: #fff; }
+  .col:first-child { margin-right: 4%; }
   .col-winner { border: 2px solid #185FA5; }
-  .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .col-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-  .badge { background: #E6F1FB; color: #0C447C; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-  .highlight { background: #f5f7fa; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 12px; }
-  .hl-label { font-size: 9px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-  .hl-value { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .col-header { display: table; width: 100%; margin-bottom: 9px; }
+  .col-title { display: table-cell; font-size: 13px; font-weight: 700; color: #1a1a1a; }
+  .badge { display: table-cell; text-align: right; background: #E6F1FB; color: #0C447C; font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; vertical-align: middle; }
+  .highlight { background: #f5f7fa; border-radius: 5px; padding: 9px 10px; margin-bottom: 10px; }
+  .hl-label { font-size: 8px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .hl-value { font-size: 17px; font-weight: 700; color: #185FA5; letter-spacing: -0.3px; }
+  .hl-sub { font-size: 9px; color: #6b7280; margin-top: 2px; }
   .costs-table { width: 100%; border-collapse: collapse; }
-  .cost-label { padding: 5px 6px; font-size: 10px; color: #374151; }
-  .cost-val { padding: 5px 6px; text-align: right; font-size: 10px; font-weight: 600; color: #1a1a1a; }
+  .costs-table thead th { padding: 4px 5px; font-size: 8px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; }
+  .cost-label { padding: 4px 5px; font-size: 9px; color: #374151; }
+  .cost-val { padding: 4px 5px; text-align: right; font-size: 9px; font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+  .cost-pct { padding: 4px 5px; text-align: right; font-size: 8px; color: #9ca3af; white-space: nowrap; }
   .alt td { background: #f9fafb; }
-  .total-row td { border-top: 2px solid #185FA5; padding: 6px; font-weight: 700; font-size: 11px; }
-  .meta-row td { padding: 4px 6px; font-size: 10px; color: #6b7280; }
-  .summary { background: #f5f7fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-top: 16px; font-size: 12px; color: #6b7280; line-height: 1.6; }
-  .summary strong { color: #1a1a1a; }
-  .economy { color: #0F6E56; font-weight: 700; }
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-size: 9px; color: #9ca3af; }
-  @media print { .footer { position: fixed; bottom: 0; } }
+  .total-row td { border-top: 1.5px solid #185FA5; padding: 5px 5px; font-weight: 700; font-size: 10px; }
+  .metrics { margin-top: 8px; padding-top: 7px; border-top: 1px solid #e5e7eb; }
+  .metric-item { display: table; width: 100%; }
+  .metric-label { display: table-cell; font-size: 9px; color: #6b7280; }
+  .metric-val { display: table-cell; text-align: right; font-size: 9px; font-weight: 600; color: #1a1a1a; }
+  .clearfix { clear: both; }
+  .summary-box { background: #185FA5; border-radius: 8px; padding: 18px 24px; width: 100%; }
+  .summary-tag { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+  .summary-phrase { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 6px; }
+  .summary-phrase .winner-name { font-size: 18px; }
+  .economy-line { display: table; width: 100%; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 8px; }
+  .economy-left { display: table-cell; vertical-align: middle; }
+  .economy-right { display: table-cell; vertical-align: middle; text-align: right; }
+  .economy { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+  .economy-label { font-size: 9px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+  .economy-pct { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .economy-pct-label { font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 30px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: table; width: 100%; }
+  .footer-inner { display: table-row; }
+  .footer td { display: table-cell; vertical-align: middle; padding: 0 28px; font-size: 8px; color: #9ca3af; }
+  .footer td:last-child { text-align: right; }
+  @media print { body { background: #fff; } .footer { position: fixed; bottom: 0; } }
 </style>
 </head>
 <body>
@@ -184,22 +221,35 @@ export default function Comparativo() {
 <div class="body">
   <div class="title">Comparativo de Instrumentos</div>
   <hr class="divider">
-  <div class="date">Gerado em ${dataStr} · Volume: ${fmt(volume)} · Prazo: ${prazo} meses</div>
+  <div class="meta">Gerado em ${dataStr} &nbsp;·&nbsp; Volume: ${fmtN(volume)} &nbsp;·&nbsp; Prazo: ${prazo} meses</div>
   <div class="cols">
     ${colHTML(ra, aIsWinner)}
     ${colHTML(rb, !aIsWinner)}
   </div>
-  <div class="summary">
-    <strong>${winner.inst.label}</strong> representa uma economia de
-    <span class="economy">${fmt(diff)}</span>
-    (${fmtPct(diffPct)} do volume) em relação ao <strong>${loser.inst.label}</strong> para este volume e prazo.
+  <div class="clearfix"></div>
+  <div class="summary-box">
+    <div class="summary-tag">Resultado da comparação</div>
+    <div class="summary-phrase">
+      <span class="winner-name">${winner.inst.label}</span> é o instrumento mais econômico para este cenário,<br>
+      gerando uma economia de <strong>${fmtN(diff)}</strong> em relação ao ${loser.inst.label}.
+    </div>
+    <div class="economy-line">
+      <div class="economy-left">
+        <div class="economy">${fmtN(diff)}</div>
+        <div class="economy-label">economia total estimada</div>
+      </div>
+      <div class="economy-right">
+        <div class="economy-pct">${fmtP(diffPct)}</div>
+        <div class="economy-pct-label">do volume bruto</div>
+      </div>
+    </div>
   </div>
 </div>
-<div class="footer">
-  <span>Bloxs</span>
-  <span>Valores indicativos — sujeitos a alteração sem aviso prévio</span>
-  <span>${dataStr}</span>
-</div>
+<table class="footer"><tr class="footer-inner">
+  <td>Bloxs</td>
+  <td style="text-align:center">Valores indicativos — sujeitos a alteração sem aviso prévio</td>
+  <td>${dataStr}</td>
+</tr></table>
 <script>window.onload = function(){ window.print(); }<\/script>
 </body>
 </html>`;
@@ -384,10 +434,13 @@ export default function Comparativo() {
         })}
       </div>
 
-      <div className={styles.summary}>
-        <strong>{winner.inst.label}</strong> representa economia de{' '}
-        <strong style={{ color: 'var(--green)' }}>{fmt(diff)}</strong> ({fmtPct(diffPct)} do volume) em relação ao{' '}
-        <strong>{loser.inst.label}</strong> para este volume e prazo.
+      <div className={styles.summaryDestaque}>
+        <div className={styles.summaryTag}>Resultado da comparação</div>
+        <div className={styles.summaryPhrase}>
+          <strong>{winner.inst.label}</strong> é o instrumento mais econômico —{' '}
+          economia de <strong style={{ color: 'var(--blue)' }}>{fmt(diff)}</strong>{' '}
+          ({fmtPct(diffPct)} do volume) em relação ao {loser.inst.label}.
+        </div>
       </div>
 
       <div className={styles.actions}>

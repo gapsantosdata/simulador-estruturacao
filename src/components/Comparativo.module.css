@@ -136,6 +136,28 @@
   margin-bottom: 12px;
 }
 
+.summaryDestaque {
+  background: var(--blue);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.summaryTag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+}
+
+.summaryPhrase {
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.5;
+}
+
 .btnLink {
   background: transparent;
   color: var(--text2);
