@@ -195,17 +195,16 @@ export default function Comparativo() {
   .metric-label { display: table-cell; font-size: 9px; color: #6b7280; }
   .metric-val { display: table-cell; text-align: right; font-size: 9px; font-weight: 600; color: #1a1a1a; }
   .clearfix { clear: both; }
-  .summary-box { background: #185FA5; border-radius: 8px; padding: 18px 24px; width: 100%; }
-  .summary-tag { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
-  .summary-phrase { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.4; margin-bottom: 6px; }
-  .summary-phrase .winner-name { font-size: 18px; }
-  .economy-line { display: table; width: 100%; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.25); padding-top: 8px; }
+  .summary-box { background: #fff; border: 2px solid #185FA5; border-radius: 8px; padding: 18px 24px; width: 100%; }
+  .summary-tag { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #185FA5; margin-bottom: 6px; }
+  .summary-phrase { font-size: 15px; font-weight: 700; color: #1a1a1a; line-height: 1.4; margin-bottom: 6px; }
+  .economy-line { display: table; width: 100%; margin-top: 8px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
   .economy-left { display: table-cell; vertical-align: middle; }
   .economy-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .economy { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
-  .economy-label { font-size: 9px; color: rgba(255,255,255,0.75); margin-top: 2px; }
-  .economy-pct { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
-  .economy-pct-label { font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .economy { font-size: 26px; font-weight: 700; color: #185FA5; letter-spacing: -0.5px; }
+  .economy-label { font-size: 9px; color: #6b7280; margin-top: 2px; }
+  .economy-pct { font-size: 13px; font-weight: 600; color: #185FA5; }
+  .economy-pct-label { font-size: 9px; color: #6b7280; margin-top: 2px; }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 30px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: table; width: 100%; }
   .footer-inner { display: table-row; }
   .footer td { display: table-cell; vertical-align: middle; padding: 0 28px; font-size: 8px; color: #9ca3af; }
