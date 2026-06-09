@@ -476,7 +476,7 @@ export default function Simulator() {
             <div className={styles.metric}>
               <div className={styles.ml}>Custo estruturação a.a.</div>
               <div className={styles.mv}>{fmtPct(result.custoAA)}</div>
-              <div className={styles.ms}>{result.custoAA.toFixed(2).replace('.', ',')}% a.a. sobre volume</div>
+              <div className={styles.ms}>custo anualizado pelo prazo</div>
             </div>
             <div className={styles.metric}>
               <div className={styles.ml}>Success Fee</div>
