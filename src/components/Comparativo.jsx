@@ -272,23 +272,29 @@ export default function Comparativo() {
         {instData.costs.map((c) => {
           const rawVal = overrides[c.id] ?? c.default;
           const numVal = typeof rawVal === 'number' ? rawVal : parseFloat(rawVal) || 0;
-          const minLabel = c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '';
+          const minLabel = c.unit === 'pct'
+            ? (c.min_pct ? ` — mín. ${c.min_pct}%` : '')
+            : (c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '');
+          const unitLabel = c.unit === 'pct'
+            ? (c.periodicidade === 'anual' ? ' (% a.a. sobre volume)' : ' (% sobre volume)')
+            : '';
           return (
             <div className={styles.editField} key={`${prefix}_${c.id}`}>
               <label>
                 <Tooltip text={c.tooltip}>
-                  {c.label}{minLabel}
+                  {c.label}{unitLabel}{minLabel}
                 </Tooltip>
               </label>
               {c.unit === 'pct' ? (
                 <input
                   type="number"
                   value={numVal}
-                  step={0.05}
-                  min={c.min_brl || 0}
+                  step={0.01}
+                  min={c.min_pct ?? 0}
                   onChange={(e) => {
                     const v = parseFloat(e.target.value) || 0;
-                    onChangeFn(c.id, c.min_brl && v < c.min_brl ? c.min_brl : v);
+                    const floor = c.min_pct ?? 0;
+                    onChangeFn(c.id, v < floor ? floor : v);
                   }}
                 />
               ) : (

@@ -282,8 +282,12 @@ export default function Simulator() {
           <div className={styles.sectionLabel}>Custos de estruturação</div>
           {inst.costs.map((c) => {
             const perioLabel = c.periodicidade === 'mensal' ? ' × prazo (meses)' : c.periodicidade === 'anual' ? ' × anos' : '';
-            const unitLabel = c.unit === 'pct' ? ' (% sobre volume)' : ` (R$${perioLabel})`;
-            const minLabel = c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '';
+            const unitLabel = c.unit === 'pct'
+              ? (c.periodicidade === 'anual' ? ' (% a.a. sobre volume)' : ' (% sobre volume)')
+              : ` (R$${perioLabel})`;
+            const minLabel = c.unit === 'pct'
+              ? (c.min_pct ? ` — mín. ${c.min_pct}%` : '')
+              : (c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '');
             const rawVal = costOverrides[c.id];
             const numVal = typeof rawVal === 'number' ? rawVal : parseFloat(rawVal) || 0;
             return (
@@ -297,11 +301,12 @@ export default function Simulator() {
                   <input
                     type="number"
                     value={numVal}
-                    step={0.05}
-                    min={c.min_brl || 0}
+                    step={0.01}
+                    min={c.min_pct ?? 0}
                     onChange={(e) => {
                       const v = parseFloat(e.target.value) || 0;
-                      handleCostChange(c.id, c.min_brl && v < c.min_brl ? c.min_brl : v);
+                      const floor = c.min_pct ?? 0;
+                      handleCostChange(c.id, v < floor ? floor : v);
                     }}
                   />
                 ) : (

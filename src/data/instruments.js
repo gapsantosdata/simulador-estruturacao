@@ -7,7 +7,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia do CRI. 0,07% a.a. sobre volume.',
-        default: 14000, unit: 'brl', min_brl: 7000,
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
       },
       {
         id: 'estruturacao',
@@ -45,7 +45,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia do CRA. 0,07% a.a. sobre volume.',
-        default: 7000, unit: 'brl', min_brl: 7000,
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
       },
       {
         id: 'estruturacao',
@@ -71,7 +71,7 @@ export const instruments = {
         id: 'escrow',
         label: 'Conta Escrow (R$/mês)',
         tooltip: 'Conta escrow para movimentação dos recursos. R$ 200/mês.',
-        default: 200, unit: 'brl', min_brl: 0,
+        default: 200, unit: 'brl', min_brl: 200,
         periodicidade: 'mensal',
       },
     ],
@@ -82,14 +82,14 @@ export const instruments = {
       {
         id: 'estruturacao',
         label: 'Estruturação / Setup do Fundo (one-off)',
-        tooltip: 'Fee único de constituição e setup do FIDC pela Bloxs.',
-        default: 50000, unit: 'brl', min_brl: 50000,
+        tooltip: 'Fee único de constituição e setup do FIDC pela Bloxs. R$ 30.000 a R$ 50.000.',
+        default: 50000, unit: 'brl', min_brl: 30000,
       },
       {
         id: 'gestao',
         label: 'Taxa de Gestão (R$/mês)',
-        tooltip: 'Gestão do FIDC pela Bloxs: 0,30% a.a. ou R$ 15.000/mês.',
-        default: 15000, unit: 'brl', min_brl: 15000,
+        tooltip: 'Gestão do FIDC pela Bloxs: 0,30% a.a. ou R$ 20.000/mês (mínimo).',
+        default: 20000, unit: 'brl', min_brl: 20000,
         periodicidade: 'mensal',
       },
       {
@@ -166,7 +166,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia da NC. 0,07% a.a. sobre volume.',
-        default: 7000, unit: 'brl', min_brl: 7000,
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
       },
       {
         id: 'estruturacao',
@@ -185,7 +185,7 @@ export const instruments = {
         id: 'escrow',
         label: 'Conta Escrow (R$/mês)',
         tooltip: 'Conta escrow para movimentação dos recursos. R$ 200/mês.',
-        default: 200, unit: 'brl', min_brl: 0,
+        default: 200, unit: 'brl', min_brl: 200,
         periodicidade: 'mensal',
       },
     ],
@@ -203,7 +203,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia aplicável à emissão CVM 88.',
-        default: 7000, unit: 'brl', min_brl: 7000,
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
       },
       {
         id: 'gestao',
@@ -227,14 +227,14 @@ export const instruments = {
       {
         id: 'estruturacao',
         label: 'Estruturação de Fundo (one-off)',
-        tooltip: 'Fee único de constituição e setup do fundo pela Bloxs.',
-        default: 50000, unit: 'brl', min_brl: 50000,
+        tooltip: 'Fee único de constituição e setup do fundo pela Bloxs. R$ 30.000 a R$ 50.000.',
+        default: 50000, unit: 'brl', min_brl: 30000,
       },
       {
         id: 'gestao',
         label: 'Taxa de Gestão (R$/mês)',
-        tooltip: 'Gestão do fundo pela Bloxs: R$ 15.000/mês (0,30% a.a. sobre PL).',
-        default: 15000, unit: 'brl', min_brl: 15000,
+        tooltip: 'Gestão do fundo pela Bloxs: 0,30% a.a. sobre PL, mínimo R$ 20.000/mês.',
+        default: 20000, unit: 'brl', min_brl: 20000,
         periodicidade: 'mensal',
       },
       {
@@ -315,6 +315,7 @@ export function calcInst(key, vol, prazo, overrides = {}) {
     let amount;
     if (c.unit === 'pct') {
       amount = (vol * raw) / 100;
+      if (c.periodicidade === 'anual') amount *= (prazo / 12);
     } else if (c.periodicidade === 'mensal') {
       amount = raw * prazo;
     } else if (c.periodicidade === 'anual') {
