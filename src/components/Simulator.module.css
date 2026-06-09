@@ -301,3 +301,121 @@
   border-color: var(--blue);
   color: var(--blue);
 }
+
+/* Optional servicers */
+.servicerBox {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 14px;
+  background: var(--bg2);
+}
+
+.servicerItem {
+  margin-bottom: 8px;
+}
+
+.servicerItem:last-child {
+  margin-bottom: 0;
+}
+
+.servicerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.servicerCheck {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.servicerCheck input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.servicerLabel {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.servicerLabelOn {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.servicerInput {
+  width: 110px;
+  padding: 5px 8px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.servicerInput:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.1);
+}
+
+.servicerHint {
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: 22px;
+  margin-top: 2px;
+}
+
+.outrosFields {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  margin-left: 22px;
+}
+
+.outrosDesc {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.outrosDesc:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.1);
+}
+
+.outrosPeriod {
+  width: 90px;
+  padding: 5px 6px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.outrosPeriod:focus {
+  outline: none;
+  border-color: var(--blue);
+}

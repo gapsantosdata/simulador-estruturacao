@@ -1,30 +1,55 @@
-import { useMemo, useState } from 'react';
-import { instruments, calcInst } from '../data/instruments';
+import { useMemo } from 'react';
+import { instruments, calcInst, optionalServices } from '../data/instruments';
 import { fmt, fmtPct } from '../data/format';
 import { useUrlState } from '../hooks/useUrlState';
 import Tooltip from './Tooltip';
 import CostDonut from './CostDonut';
+import CurrencyInput from './CurrencyInput';
 import styles from './Simulator.module.css';
 
 const INDEXADORES = ['CDI', 'IPCA+', 'IGPM+', 'Prefixado'];
 const INST_KEYS = Object.keys(instruments);
+const SUCCESS_MIN_PCT = 2;
 
 export default function Simulator() {
   const { get, set } = useUrlState();
 
   const instKey = get('inst', 'cri');
-  const volume = get('vol', 10000000);
-  const prazo = get('prazo', 36);
+  const volume = parseFloat(get('vol', 10000000)) || 10000000;
+  const prazo = parseFloat(get('prazo', 36)) || 36;
   const indexador = get('idx', 'CDI');
-  const taxa = get('taxa', 12.5);
-  const successOn = true;
+  const taxa = parseFloat(get('taxa', 12.5)) || 12.5;
   const successType = get('stype', 'pct');
-  const successVal = get('sval', 2);
-  const successDesc = get('sdesc', 'Distribuição RCVM 161');
+  const successVal = Math.max(SUCCESS_MIN_PCT, parseFloat(get('sval', 2)) || 2);
+  const successDesc = get('sdesc', 'Distribuição');
 
   const inst = instruments[instKey] || instruments.cri;
 
-  // Per-cost overrides stored in URL as cost_<id>
+  // Optional services
+  const svcEnabled = useMemo(() => {
+    const o = {};
+    optionalServices.forEach((s) => { o[s.id] = get(`svc_${s.id}`, '0') === '1'; });
+    return o;
+  }, [get]);
+
+  const svcValues = useMemo(() => {
+    const o = {};
+    optionalServices.forEach((s) => { o[s.id] = parseFloat(get(`svcval_${s.id}`, s.default)) || 0; });
+    return o;
+  }, [get]);
+
+  const outrosDesc = get('svcdesc_outros', '');
+  const outrosPeriod = get('svcperiod_outros', 'mensal');
+
+  function handleSvcToggle(id) {
+    set({ [`svc_${id}`]: svcEnabled[id] ? '0' : '1' });
+  }
+
+  function handleSvcValueChange(id, val) {
+    set({ [`svcval_${id}`]: val });
+  }
+
+  // Per-cost overrides
   const costOverrides = useMemo(() => {
     const o = {};
     inst.costs.forEach((c) => {
@@ -36,19 +61,33 @@ export default function Simulator() {
 
   const result = useMemo(() => {
     const r = calcInst(instKey, volume, prazo, costOverrides);
-    let successAmt = 0;
-    if (successOn) {
-      successAmt = successType === 'pct' ? (volume * successVal) / 100 : successVal;
-    }
-    const totalAll = r.total + successAmt;
+    const successAmt = successType === 'pct' ? (volume * successVal) / 100 : successVal;
+
+    const svcRows = [];
+    let svcTotal = 0;
+    optionalServices.forEach((s) => {
+      if (!svcEnabled[s.id]) return;
+      const val = svcValues[s.id];
+      if (!val) return;
+      const period = s.isOther ? outrosPeriod : s.periodicidade;
+      let amount;
+      if (period === 'mensal') amount = val * prazo;
+      else if (period === 'anual') amount = val * (prazo / 12);
+      else amount = val;
+      svcTotal += amount;
+      const label = s.isOther ? (outrosDesc || 'Outros') : s.label;
+      svcRows.push({ id: s.id, label, amount });
+    });
+
+    const totalAll = r.total + successAmt + svcTotal;
     const liquido = volume - totalAll;
     const custoPct = volume > 0 ? (totalAll / volume) * 100 : 0;
     const liquidoPct = volume > 0 ? (liquido / volume) * 100 : 0;
     const custoAA = prazo > 0 ? custoPct / (prazo / 12) : 0;
-    const allRows = [...r.rows];
-    if (successOn && successAmt > 0) allRows.push({ id: 'success', label: successDesc || 'Success fee', amount: successAmt });
-    return { ...r, successAmt, totalAll, liquido, custoPct, liquidoPct, custoAA, allRows };
-  }, [instKey, volume, prazo, costOverrides, successOn, successType, successVal, successDesc]);
+    const allRows = [...r.rows, ...svcRows];
+    if (successAmt > 0) allRows.push({ id: 'success', label: successDesc || 'Success fee', amount: successAmt });
+    return { ...r, successAmt, svcTotal, totalAll, liquido, custoPct, liquidoPct, custoAA, allRows };
+  }, [instKey, volume, prazo, costOverrides, successType, successVal, successDesc, svcEnabled, svcValues, outrosDesc, outrosPeriod]);
 
   function handleCostChange(id, val) {
     set({ [`cost_${id}`]: val });
@@ -87,158 +126,51 @@ export default function Simulator() {
 <meta charset="UTF-8">
 <title>Bloxs — Simulação ${inst.label}</title>
 <style>
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
+  @page { size: A4 portrait; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
-    color: #1a1a1a;
-    background: #fff;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* HEADER */
-  .header {
-    background: #185FA5;
-    color: #fff;
-    padding: 14px 32px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .header-left { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .header { background: #185FA5; color: #fff; padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .header-left { font-size: 15px; font-weight: 700; }
   .header-right { font-size: 10px; opacity: 0.82; }
-
-  /* BODY */
   .body { padding: 28px 32px 100px; }
-
   .title { font-size: 18px; font-weight: 700; color: #185FA5; margin-bottom: 3px; }
-  .divider { border: none; border-top: 2px solid #185FA5; margin: 6px 0 6px; }
+  .divider { border: none; border-top: 2px solid #185FA5; margin: 6px 0; }
   .date { font-size: 10px; color: #aaa; margin-bottom: 22px; }
-
-  /* SECTION LABEL */
-  .section {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #9ca3af;
-    margin: 20px 0 8px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  /* PARAMS TABLE */
+  .section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 20px 0 8px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
   .params-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
   .param-key { width: 160px; padding: 5px 8px; color: #6b7280; font-size: 11px; }
   .param-val { padding: 5px 8px; font-size: 11px; font-weight: 600; color: #1a1a1a; }
-
-  /* COSTS TABLE */
   .costs-table { width: 100%; border-collapse: collapse; }
-  .costs-table thead th {
-    text-align: left;
-    padding: 6px 8px;
-    font-size: 10px;
-    font-weight: 700;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid #e5e7eb;
-    background: #fff;
-  }
+  .costs-table thead th { text-align: left; padding: 6px 8px; font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; }
   .costs-table thead th:not(:first-child) { text-align: right; }
   .cost-label { padding: 6px 8px; font-size: 11px; color: #374151; }
   .cost-val { padding: 6px 8px; text-align: right; font-size: 11px; font-weight: 600; color: #1a1a1a; }
   .cost-pct { padding: 6px 8px; text-align: right; font-size: 10px; color: #9ca3af; }
   .alt td { background: #f9fafb; }
-
-  /* TOTAL ROW */
-  .total-row td {
-    padding: 8px 8px;
-    font-weight: 700;
-    font-size: 12px;
-    color: #1a1a1a;
-    border-top: 2px solid #185FA5;
-  }
-  .total-row .cost-val { font-size: 13px; }
-
-  /* RESULT BOX */
-  .result-box {
-    background: #EBF5FD;
-    border: 1.5px solid #185FA5;
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .result-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #0C447C;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 5px;
-  }
-  .result-value { font-size: 26px; font-weight: 700; color: #185FA5; letter-spacing: -0.5px; }
+  .total-row td { padding: 8px; font-weight: 700; font-size: 12px; color: #1a1a1a; border-top: 2px solid #185FA5; }
+  .result-box { background: #EBF5FD; border: 1.5px solid #185FA5; border-radius: 8px; padding: 16px 20px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .result-label { font-size: 10px; font-weight: 700; color: #0C447C; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .result-value { font-size: 26px; font-weight: 700; color: #185FA5; }
   .result-meta { text-align: right; font-size: 11px; color: #374151; line-height: 1.7; }
   .result-meta strong { color: #185FA5; }
-
-  /* FOOTER */
-  .footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 36px;
-    background: #f5f7fa;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    font-size: 9px;
-    color: #9ca3af;
-  }
-
-  @media print {
-    body { background: #fff; }
-    .footer { position: fixed; bottom: 0; }
-  }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 36px; background: #f5f7fa; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-size: 9px; color: #9ca3af; }
+  @media print { body { background: #fff; } .footer { position: fixed; bottom: 0; } }
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="header-left">Bloxs</div>
   <div class="header-right">Simulador de Custos de Estruturação</div>
 </div>
-
 <div class="body">
-
   <div class="title">Resumo da Simulação — ${inst.label}</div>
   <hr class="divider">
   <div class="date">Gerado em ${dataStr}</div>
-
   <div class="section">Parâmetros da operação</div>
-  <table class="params-table">
-    <tbody>${paramsRows}</tbody>
-  </table>
-
+  <table class="params-table"><tbody>${paramsRows}</tbody></table>
   <div class="section">Breakdown de custos</div>
   <table class="costs-table">
-    <thead>
-      <tr>
-        <th style="text-align:left">Item</th>
-        <th style="text-align:right">Valor (R$)</th>
-        <th style="text-align:right">% Volume</th>
-      </tr>
-    </thead>
+    <thead><tr><th style="text-align:left">Item</th><th style="text-align:right">Valor (R$)</th><th style="text-align:right">% Volume</th></tr></thead>
     <tbody>
       ${costRows}
       <tr class="total-row">
@@ -248,7 +180,6 @@ export default function Simulator() {
       </tr>
     </tbody>
   </table>
-
   <div class="result-box">
     <div>
       <div class="result-label">Volume líquido ao emissor</div>
@@ -260,15 +191,12 @@ export default function Simulator() {
       Prazo: <strong>${prazo} meses</strong> · ${indexador} + ${taxa}% a.a.
     </div>
   </div>
-
 </div>
-
 <div class="footer">
   <span>Bloxs</span>
   <span>Valores indicativos — sujeitos a alteração sem aviso prévio</span>
   <span>${dataStr}</span>
 </div>
-
 <script>window.onload = function(){ window.print(); }<\/script>
 </body>
 </html>`;
@@ -279,7 +207,7 @@ export default function Simulator() {
     if (!w) {
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bloxs_simulacao_${inst.label.toLowerCase().replace(/\s+/g,'_')}.html`;
+      a.download = `bloxs_simulacao_${inst.label.toLowerCase().replace(/\s+/g, '_')}.html`;
       a.click();
     }
     setTimeout(() => URL.revokeObjectURL(url), 15000);
@@ -315,7 +243,11 @@ export default function Simulator() {
 
           <div className={styles.field}>
             <label>Volume bruto (R$)</label>
-            <input type="number" value={volume} step="100000" onChange={(e) => set({ vol: e.target.value })} />
+            <CurrencyInput
+              value={volume}
+              min={0}
+              onChange={(v) => set({ vol: v })}
+            />
           </div>
           <div className={styles.field}>
             <label>Prazo (meses)</label>
@@ -337,6 +269,8 @@ export default function Simulator() {
             const perioLabel = c.periodicidade === 'mensal' ? ' × prazo (meses)' : c.periodicidade === 'anual' ? ' × anos' : '';
             const unitLabel = c.unit === 'pct' ? ' (% sobre volume)' : ` (R$${perioLabel})`;
             const minLabel = c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '';
+            const rawVal = costOverrides[c.id];
+            const numVal = typeof rawVal === 'number' ? rawVal : parseFloat(rawVal) || 0;
             return (
               <div className={styles.field} key={c.id}>
                 <label>
@@ -344,22 +278,91 @@ export default function Simulator() {
                     {c.label}{unitLabel}{minLabel}
                   </Tooltip>
                 </label>
-                <input
-                  type="number"
-                  value={typeof costOverrides[c.id] === 'number' ? parseFloat(costOverrides[c.id].toFixed(6)) : costOverrides[c.id]}
-                  step={c.unit === 'pct' ? 0.05 : c.periodicidade ? 100 : 1000}
-                  min={c.min_brl || 0}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value) || 0;
-                    const clamped = c.min_brl && v < c.min_brl ? c.min_brl : v;
-                    handleCostChange(c.id, clamped);
-                  }}
-                />
+                {c.unit === 'pct' ? (
+                  <input
+                    type="number"
+                    value={numVal}
+                    step={0.05}
+                    min={c.min_brl || 0}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value) || 0;
+                      handleCostChange(c.id, c.min_brl && v < c.min_brl ? c.min_brl : v);
+                    }}
+                  />
+                ) : (
+                  <CurrencyInput
+                    value={numVal}
+                    min={c.min_brl || 0}
+                    onChange={(v) => handleCostChange(c.id, v)}
+                  />
+                )}
               </div>
             );
           })}
 
-          {/* Success fee — sempre ativo */}
+          {/* Serviços adicionais — antes do Success Fee */}
+          <div className={styles.servicerBox}>
+            <div className={styles.successHeader}>
+              <span className={styles.successTitle}>Serviços adicionais (opcional)</span>
+            </div>
+            {optionalServices.map((s) => {
+              const enabled = svcEnabled[s.id];
+              const perioLabel = s.isOther
+                ? { mensal: 'R$/mês', anual: 'R$/ano', 'one-off': 'R$ one-off' }[outrosPeriod]
+                : s.periodicidade === 'mensal' ? 'R$/mês' : s.periodicidade === 'anual' ? 'R$/ano' : 'R$ one-off';
+              return (
+                <div key={s.id} className={styles.servicerItem}>
+                  <div className={styles.servicerRow}>
+                    <label className={styles.servicerCheck}>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={() => handleSvcToggle(s.id)}
+                      />
+                      <Tooltip text={s.tooltip}>
+                        <span className={enabled ? styles.servicerLabelOn : styles.servicerLabel}>
+                          {s.label}
+                        </span>
+                      </Tooltip>
+                    </label>
+                    {enabled && (
+                      <CurrencyInput
+                        value={svcValues[s.id]}
+                        min={0}
+                        onChange={(v) => handleSvcValueChange(s.id, v)}
+                        className={styles.servicerInput}
+                      />
+                    )}
+                  </div>
+                  {enabled && s.isOther && (
+                    <div className={styles.outrosFields}>
+                      <input
+                        type="text"
+                        className={styles.outrosDesc}
+                        placeholder="Especifique o serviço..."
+                        value={outrosDesc}
+                        onChange={(e) => set({ svcdesc_outros: e.target.value })}
+                      />
+                      <select
+                        className={styles.outrosPeriod}
+                        value={outrosPeriod}
+                        onChange={(e) => set({ svcperiod_outros: e.target.value })}
+                      >
+                        <option value="one-off">One-off</option>
+                        <option value="mensal">Mensal</option>
+                        <option value="anual">Anual</option>
+                      </select>
+                    </div>
+                  )}
+                  {enabled && (
+                    <div className={styles.servicerHint}>{perioLabel}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Success fee */}
           <div className={styles.successBox}>
             <div className={styles.successHeader}>
               <span className={styles.successTitle}>Success Fee</span>
@@ -372,8 +375,27 @@ export default function Simulator() {
               </select>
             </div>
             <div className={styles.field}>
-              <label>{successType === 'pct' ? 'Success fee (%)' : 'Success fee (R$)'}</label>
-              <input type="number" value={successVal} step="0.25" onChange={(e) => set({ sval: e.target.value })} />
+              <label>
+                {successType === 'pct' ? `Success fee (% — mín. ${SUCCESS_MIN_PCT}%)` : 'Success fee (R$)'}
+              </label>
+              {successType === 'pct' ? (
+                <input
+                  type="number"
+                  value={successVal}
+                  step="0.25"
+                  min={SUCCESS_MIN_PCT}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value) || SUCCESS_MIN_PCT;
+                    set({ sval: Math.max(SUCCESS_MIN_PCT, v) });
+                  }}
+                />
+              ) : (
+                <CurrencyInput
+                  value={successVal}
+                  min={0}
+                  onChange={(v) => set({ sval: v })}
+                />
+              )}
             </div>
             <div className={styles.field}>
               <label>Descrição</label>
@@ -405,8 +427,8 @@ export default function Simulator() {
             </div>
             <div className={styles.metric}>
               <div className={styles.ml}>Success Fee</div>
-              <div className={styles.mv}>{successOn && result.successAmt > 0 ? fmt(result.successAmt) : '—'}</div>
-              <div className={styles.ms}>{successOn && result.successAmt > 0 ? fmtPct(volume > 0 ? result.successAmt / volume * 100 : 0) + ' do volume' : 'desativado'}</div>
+              <div className={styles.mv}>{result.successAmt > 0 ? fmt(result.successAmt) : '—'}</div>
+              <div className={styles.ms}>{result.successAmt > 0 ? fmtPct(volume > 0 ? result.successAmt / volume * 100 : 0) + ' do volume' : '—'}</div>
             </div>
           </div>
 
