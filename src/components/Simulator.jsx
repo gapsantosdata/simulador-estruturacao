@@ -303,7 +303,7 @@ export default function Simulator() {
               </div>
               <div className={styles.field}>
                 <label>Taxa indicativa (% a.a.)</label>
-                <div className={styles.calcDisplay}>{taxaAll.toFixed(2).replace('.', ',')}% a.a. &nbsp;<span className={styles.calcHint}>({indexador} {idxRate.toFixed(2).replace('.', ',')}% + spread {spread.toFixed(2).replace('.', ',')}%)</span></div>
+                <div className={styles.calcDisplay}>{taxaAll.toFixed(2).replace('.', ',')}% a.a.</div>
               </div>
             </>
           )}
