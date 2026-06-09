@@ -116,7 +116,9 @@ export default function Simulator() {
       </tr>`).join('');
 
     const costRows = d.allRows.map((r, i) => {
-      const pct = volume > 0 ? ((r.amount / volume) * 100).toFixed(2).replace('.', ',') + '%' : '0,00%';
+      const pct = r.unit === 'pct' && r.periodicidade === 'anual'
+        ? `${r.val}% a.a.`
+        : (volume > 0 ? ((r.amount / volume) * 100).toFixed(2).replace('.', ',') + '%' : '0,00%');
       return `
         <tr class="${i % 2 === 1 ? 'alt' : ''}">
           <td class="cost-label">${r.label}</td>
@@ -453,15 +455,20 @@ export default function Simulator() {
           </div>
 
           <div className={styles.cardTitle} style={{ marginTop: '12px' }}>Breakdown</div>
-          {result.allRows.map((r) => (
-            <div className={styles.breakdownRow} key={r.id || r.label}>
-              <span className={styles.bl}>{r.label}</span>
-              <span className={styles.bv}>
-                {fmt(r.amount)}
-                <span className={styles.bp}> ({fmtPct(volume > 0 ? r.amount / volume * 100 : 0)})</span>
-              </span>
-            </div>
-          ))}
+          {result.allRows.map((r) => {
+            const pctLabel = r.unit === 'pct' && r.periodicidade === 'anual'
+              ? `${r.val}% a.a.`
+              : fmtPct(volume > 0 ? r.amount / volume * 100 : 0);
+            return (
+              <div className={styles.breakdownRow} key={r.id || r.label}>
+                <span className={styles.bl}>{r.label}</span>
+                <span className={styles.bv}>
+                  {fmt(r.amount)}
+                  <span className={styles.bp}> ({pctLabel})</span>
+                </span>
+              </div>
+            );
+          })}
           <div className={styles.totalRow}>
             <span>Total</span>
             <span>{fmt(result.totalAll)}</span>

@@ -412,12 +412,17 @@ export default function Comparativo() {
                 <div className={styles.hlLabel}>Volume líquido ao emissor</div>
                 <div className={styles.hlValue}>{fmt(r.liquido)}</div>
               </div>
-              {r.allRows.map((row) => (
-                <div className={styles.compRow} key={row.id}>
-                  <span className={styles.cl}>{row.label}</span>
-                  <span className={styles.cv}>{fmt(row.amount)}</span>
-                </div>
-              ))}
+              {r.allRows.map((row) => {
+                const pctLabel = row.unit === 'pct' && row.periodicidade === 'anual'
+                  ? `${row.val}% a.a.`
+                  : fmtPct(volume > 0 ? row.amount / volume * 100 : 0);
+                return (
+                  <div className={styles.compRow} key={row.id}>
+                    <span className={styles.cl}>{row.label}</span>
+                    <span className={styles.cv}>{fmt(row.amount)} <span style={{opacity:.6,fontSize:'0.85em'}}>({pctLabel})</span></span>
+                  </div>
+                );
+              })}
               <div className={`${styles.compRow} ${styles.totalLine}`}>
                 <span className={styles.cl}>Custo total</span>
                 <span className={styles.cv}>{fmt(r.total)}</span>
