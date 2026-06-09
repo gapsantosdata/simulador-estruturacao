@@ -419,3 +419,18 @@
   outline: none;
   border-color: var(--blue);
 }
+
+.calcDisplay {
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--blue);
+}
+.calcHint {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--muted);
+}

@@ -8,6 +8,7 @@ import CurrencyInput from './CurrencyInput';
 import styles from './Simulator.module.css';
 
 const INDEXADORES = ['CDI', 'IPCA+', 'IGPM+', 'Prefixado'];
+const IDX_DEFAULTS = { CDI: 13.75, 'IPCA+': 5.53, 'IGPM+': 7.20 };
 const INST_KEYS = Object.keys(instruments);
 const SUCCESS_MIN_PCT = 2;
 
@@ -24,6 +25,11 @@ export default function Simulator() {
   const prazo = parseFloat(get('prazo', 36)) || 36;
   const indexador = get('idx', 'CDI');
   const taxa = parseFloat(get('taxa', 12.5)) || 12.5;
+  const isPrefixado = indexador === 'Prefixado';
+  const idxRateDefault = IDX_DEFAULTS[indexador] !== undefined ? IDX_DEFAULTS[indexador] : 13.75;
+  const idxRate = isPrefixado ? 0 : (parseFloat(get('idxrate', idxRateDefault)) || idxRateDefault);
+  const spread = isPrefixado ? taxa : (parseFloat(get('spread', 2)) || 0);
+  const taxaAll = isPrefixado ? taxa : idxRate + spread;
   const successType = get('stype', 'pct');
   const successVal = Math.max(SUCCESS_MIN_PCT, parseFloat(get('sval', 2)) || 2);
   const successDesc = get('sdesc', 'Distribuição');
@@ -108,7 +114,16 @@ export default function Simulator() {
       ['Volume bruto', fmtN(volume)],
       ['Prazo', prazo + ' meses'],
       ['Indexador', indexador],
-      ['Taxa indicativa', taxa.toFixed(2).replace('.', ',') + '% a.a.'],
+      ...(isPrefixado
+        ? [['Taxa indicativa', taxa.toFixed(2).replace('.', ',') + '% a.a.']]
+        : [
+            [`Taxa ${indexador} atual`, idxRate.toFixed(2).replace('.', ',') + '% a.a.'],
+            ['Spread', spread.toFixed(2).replace('.', ',') + '% a.a.'],
+            ['Taxa indicativa', taxaAll.toFixed(2).replace('.', ',') + '% a.a.'],
+          ]
+      ),
+      ['Custo estruturação a.a.', fmtP(result.custoAA)],
+      ['Taxa all-in estimada', (taxaAll + result.custoAA).toFixed(2).replace('.', ',') + '% a.a.'],
     ].map(([k, v]) => `
       <tr>
         <td class="param-key">${k}</td>
@@ -272,14 +287,32 @@ export default function Simulator() {
           </div>
           <div className={styles.field}>
             <label>Indexador</label>
-            <select value={indexador} onChange={(e) => set({ idx: e.target.value })}>
+            <select value={indexador} onChange={(e) => set({ idx: e.target.value, idxrate: IDX_DEFAULTS[e.target.value] ?? '' })}>
               {INDEXADORES.map((i) => <option key={i}>{i}</option>)}
             </select>
           </div>
-          <div className={styles.field}>
-            <label>Taxa indicativa (% a.a.)</label>
-            <input type="number" value={taxa} step="0.25" onChange={(e) => set({ taxa: e.target.value })} />
-          </div>
+          {!isPrefixado && (
+            <>
+              <div className={styles.field}>
+                <label>Taxa {indexador} atual (% a.a.)</label>
+                <input type="number" value={idxRate} step="0.01" min="0" onChange={(e) => set({ idxrate: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <label>Spread (% a.a.)</label>
+                <input type="number" value={spread} step="0.25" min="0" onChange={(e) => set({ spread: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <label>Taxa indicativa (% a.a.)</label>
+                <div className={styles.calcDisplay}>{taxaAll.toFixed(2).replace('.', ',')}% a.a. &nbsp;<span className={styles.calcHint}>({indexador} {idxRate.toFixed(2).replace('.', ',')}% + spread {spread.toFixed(2).replace('.', ',')}%)</span></div>
+              </div>
+            </>
+          )}
+          {isPrefixado && (
+            <div className={styles.field}>
+              <label>Taxa indicativa (% a.a.)</label>
+              <input type="number" value={taxa} step="0.25" min="0" onChange={(e) => set({ taxa: e.target.value })} />
+            </div>
+          )}
 
           <div className={styles.sectionLabel}>Custos de estruturação</div>
           {inst.costs.map((c) => {
@@ -441,9 +474,9 @@ export default function Simulator() {
               <div className={styles.ms}>{fmtPct(result.custoPct)} do volume</div>
             </div>
             <div className={styles.metric}>
-              <div className={styles.ml}>Custo médio a.a.</div>
+              <div className={styles.ml}>Custo estruturação a.a.</div>
               <div className={styles.mv}>{fmtPct(result.custoAA)}</div>
-              <div className={styles.ms}>{indexador} + {taxa}% a.a.</div>
+              <div className={styles.ms}>All-in: {(taxaAll + result.custoAA).toFixed(2).replace('.', ',')}% a.a.</div>
             </div>
             <div className={styles.metric}>
               <div className={styles.ml}>Success Fee</div>
