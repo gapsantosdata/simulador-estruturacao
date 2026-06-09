@@ -116,7 +116,7 @@ export default function Simulator() {
       </tr>`).join('');
 
     const costRows = d.allRows.map((r, i) => {
-      const pct = r.unit === 'pct' && r.periodicidade === 'anual'
+      const pct = r.unit === 'pct'
         ? `${r.val}% a.a.`
         : (volume > 0 ? ((r.amount / volume) * 100).toFixed(2).replace('.', ',') + '%' : '0,00%');
       return `
@@ -284,9 +284,7 @@ export default function Simulator() {
           <div className={styles.sectionLabel}>Custos de estruturação</div>
           {inst.costs.map((c) => {
             const perioLabel = c.periodicidade === 'mensal' ? ' × prazo (meses)' : c.periodicidade === 'anual' ? ' × anos' : '';
-            const unitLabel = c.unit === 'pct'
-              ? (c.periodicidade === 'anual' ? ' (% a.a. sobre volume)' : ' (% sobre volume)')
-              : ` (R$${perioLabel})`;
+            const unitLabel = c.unit === 'pct' ? ' (% a.a. sobre volume)' : ` (R$${perioLabel})`;
             const minLabel = c.unit === 'pct'
               ? (c.min_pct ? ` — mín. ${c.min_pct}%` : '')
               : (c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '');
@@ -456,7 +454,7 @@ export default function Simulator() {
 
           <div className={styles.cardTitle} style={{ marginTop: '12px' }}>Breakdown</div>
           {result.allRows.map((r) => {
-            const pctLabel = r.unit === 'pct' && r.periodicidade === 'anual'
+            const pctLabel = r.unit === 'pct'
               ? `${r.val}% a.a.`
               : fmtPct(volume > 0 ? r.amount / volume * 100 : 0);
             return (

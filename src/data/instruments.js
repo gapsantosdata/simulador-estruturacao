@@ -7,7 +7,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia do CRI. 0,07% a.a. sobre volume.',
-        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07,
       },
       {
         id: 'estruturacao',
@@ -45,7 +45,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia do CRA. 0,07% a.a. sobre volume.',
-        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07,
       },
       {
         id: 'estruturacao',
@@ -166,7 +166,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia da NC. 0,07% a.a. sobre volume.',
-        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07,
       },
       {
         id: 'estruturacao',
@@ -203,7 +203,7 @@ export const instruments = {
         id: 'laqus',
         label: 'Escrituração + Depósito + Custódia (a.a.)',
         tooltip: 'Pacote de escrituração, depósito e custódia aplicável à emissão CVM 88.',
-        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07, periodicidade: 'anual',
+        default: 0.07, unit: 'pct', min_brl: 0, min_pct: 0.07,
       },
       {
         id: 'gestao',

@@ -275,9 +275,7 @@ export default function Comparativo() {
           const minLabel = c.unit === 'pct'
             ? (c.min_pct ? ` — mín. ${c.min_pct}%` : '')
             : (c.min_brl ? ` — mín. ${fmt(c.min_brl)}` : '');
-          const unitLabel = c.unit === 'pct'
-            ? (c.periodicidade === 'anual' ? ' (% a.a. sobre volume)' : ' (% sobre volume)')
-            : '';
+          const unitLabel = c.unit === 'pct' ? ' (% a.a. sobre volume)' : '';
           return (
             <div className={styles.editField} key={`${prefix}_${c.id}`}>
               <label>
@@ -413,7 +411,7 @@ export default function Comparativo() {
                 <div className={styles.hlValue}>{fmt(r.liquido)}</div>
               </div>
               {r.allRows.map((row) => {
-                const pctLabel = row.unit === 'pct' && row.periodicidade === 'anual'
+                const pctLabel = row.unit === 'pct'
                   ? `${row.val}% a.a.`
                   : fmtPct(volume > 0 ? row.amount / volume * 100 : 0);
                 return (
